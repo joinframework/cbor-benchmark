@@ -56,13 +56,21 @@ static std::string hex (std::string_view text)
     {
         int digit;
         if (c >= '0' && c <= '9')
+        {
             digit = c - '0';
+        }
         else if (c >= 'a' && c <= 'f')
+        {
             digit = c - 'a' + 10;
+        }
         else
+        {
             continue;
+        }
         if (high < 0)
+        {
             high = digit;
+        }
         else
         {
             bytes.push_back (static_cast<char> (high * 16 + digit));
@@ -238,11 +246,17 @@ static double half_to_double (uint16_t half)
     int mantissa = half & 0x3ff;
     double value;
     if (exponent == 0)
+    {
         value = std::ldexp (mantissa, -24);
+    }
     else if (exponent != 31)
+    {
         value = std::ldexp (mantissa + 1024, exponent - 25);
+    }
     else
+    {
         value = mantissa == 0 ? INFINITY : NAN;
+    }
     return (half & 0x8000) ? -value : value;
 }
 
@@ -281,7 +295,9 @@ public:
     {
         Node node;
         if (!value (node, 0) || _pos != _in.size ())
+        {
             return std::nullopt;
+        }
         return node;
     }
 
@@ -289,7 +305,9 @@ private:
     bool take (uint64_t size, std::string_view& out)
     {
         if (size > _in.size () - _pos)
+        {
             return false;
+        }
         out = _in.substr (_pos, size);
         _pos += size;
         return true;
@@ -299,10 +317,14 @@ private:
     {
         std::string_view raw;
         if (!take (width, raw))
+        {
             return false;
+        }
         out = 0;
         for (char c : raw)
+        {
             out = (out << 8) | static_cast<uint8_t> (c);
+        }
         return true;
     }
 
@@ -314,7 +336,9 @@ private:
             return true;
         }
         if (info > 27)
+        {
             return false;
+        }
         return number (size_t (1) << (info - 24), out);
     }
 
@@ -335,7 +359,9 @@ private:
             uint64_t head, size;
             std::string_view raw;
             if (!number (1, head) || (head >> 5) != major || !argument (head & 0x1f, size) || !take (size, raw))
+            {
                 return false;
+            }
             node.bytes += raw;
         }
         return true;
@@ -345,7 +371,9 @@ private:
     {
         uint64_t head, arg;
         if (depth > 1000 || !number (1, head))
+        {
             return false;
+        }
         uint8_t major = static_cast<uint8_t> (head >> 5);
         uint8_t info = static_cast<uint8_t> (head & 0x1f);
         if (info == 31)
@@ -362,7 +390,9 @@ private:
                     {
                         node.items.emplace_back ();
                         if (!value (node.items.back (), depth + 1))
+                        {
                             return false;
+                        }
                     }
                     return true;
                 case 5:
@@ -372,7 +402,9 @@ private:
                         node.members.emplace_back ();
                         if (!value (node.members.back ().first, depth + 1) ||
                             !value (node.members.back ().second, depth + 1))
+                        {
                             return false;
+                        }
                     }
                     return true;
                 default:
@@ -394,10 +426,14 @@ private:
             }
             uint64_t raw;
             if (!argument (info, raw))
+            {
                 return false;
+            }
             node.kind = Node::Float;
             if (info == 25)
+            {
                 node.real = half_to_double (static_cast<uint16_t> (raw));
+            }
             else if (info == 26)
             {
                 uint32_t bits = static_cast<uint32_t> (raw);
@@ -406,11 +442,15 @@ private:
                 node.real = f;
             }
             else
+            {
                 std::memcpy (&node.real, &raw, 8);
+            }
             return true;
         }
         if (!argument (info, arg))
+        {
             return false;
+        }
         switch (major)
         {
             case 0:
@@ -420,34 +460,44 @@ private:
                 return true;
             case 2:
             case 3:
-            {
-                std::string_view raw;
-                node.kind = major == 2 ? Node::Bytes : Node::Text;
-                if (!take (arg, raw))
-                    return false;
-                node.bytes = raw;
-                return true;
-            }
+                {
+                    std::string_view raw;
+                    node.kind = major == 2 ? Node::Bytes : Node::Text;
+                    if (!take (arg, raw))
+                    {
+                        return false;
+                    }
+                    node.bytes = raw;
+                    return true;
+                }
             case 4:
                 if (arg > _in.size () - _pos)
+                {
                     return false;
+                }
                 node.kind = Node::Array;
                 node.items.resize (arg);
                 for (auto& item : node.items)
                 {
                     if (!value (item, depth + 1))
+                    {
                         return false;
+                    }
                 }
                 return true;
             case 5:
                 if (arg > (_in.size () - _pos) / 2)
+                {
                     return false;
+                }
                 node.kind = Node::Map;
                 node.members.resize (arg);
                 for (auto& [key, val] : node.members)
                 {
                     if (!value (key, depth + 1) || !value (val, depth + 1))
+                    {
                         return false;
+                    }
                 }
                 return true;
             default:
@@ -465,7 +515,9 @@ private:
 static bool same_value (const Node& a, const Node& b)
 {
     if (a.kind != b.kind)
+    {
         return false;
+    }
     switch (a.kind)
     {
         case Node::Uint:
@@ -481,23 +533,33 @@ static bool same_value (const Node& a, const Node& b)
             return a.number == b.number && same_value (a.items[0], b.items[0]);
         case Node::Array:
             if (a.items.size () != b.items.size ())
+            {
                 return false;
+            }
             for (size_t i = 0; i < a.items.size (); ++i)
             {
                 if (!same_value (a.items[i], b.items[i]))
+                {
                     return false;
+                }
             }
             return true;
         case Node::Map:
             if (a.members.size () != b.members.size ())
+            {
                 return false;
+            }
             for (auto& [key, val] : a.members)
             {
                 bool found = false;
                 for (size_t j = 0; j < b.members.size () && !found; ++j)
+                {
                     found = same_value (key, b.members[j].first) && same_value (val, b.members[j].second);
+                }
                 if (!found)
+                {
                     return false;
+                }
             }
             return true;
     }
@@ -536,11 +598,17 @@ static void node_stat (Stat& stat, const Node& node)
             break;
         case Node::Simple:
             if (node.number == 20)
+            {
                 stat.false_count++;
+            }
             else if (node.number == 21)
+            {
                 stat.true_count++;
+            }
             else if (node.number == 22)
+            {
                 stat.null_count++;
+            }
             break;
         case Node::Tag:
             node_stat (stat, node.items[0]);
@@ -561,20 +629,28 @@ template <typename Adapter, typename Output>
 std::string_view output_view (const Output& output)
 {
     if constexpr (std::is_convertible_v<const Output&, std::string_view>)
+    {
         return output;
+    }
     else
+    {
         return Adapter::view (output);
+    }
 }
 
 static void count (Score& score, bool ok, bool verbose, const char* what, const std::string& name)
 {
     if (ok)
+    {
         score.pass++;
+    }
     else
     {
         score.fail++;
         if (verbose)
+        {
             std::cerr << "  [FAIL] " << what << ": " << name << "\n";
+        }
     }
 }
 
@@ -594,7 +670,9 @@ template <typename Adapter>
 void run_invalid (Result& r, const std::vector<Case>& cases, bool verbose)
 {
     for (auto& c : cases)
+    {
         count (r.reject, !Adapter::accepts (c.bytes), verbose, "should reject", c.name);
+    }
 }
 
 template <typename Adapter>
@@ -618,14 +696,20 @@ bool run_output_check (const std::vector<std::string>& files)
         auto stat = Adapter::statistics (*doc);
         Stat expected;
         if (auto node = Decoder (cbor).decode ())
+        {
             node_stat (expected, *node);
+        }
         if (!(stat == expected))
+        {
             fail (files[i], "statistics");
+        }
         auto result = Adapter::serialize (*doc);
         auto output = output_view<Adapter> (result);
         auto reparsed = Adapter::parse (output);
         if (!reparsed || !(Adapter::statistics (*reparsed) == stat) || !same_document (cbor, output))
+        {
             fail (files[i], "serialize");
+        }
     }
     return ok;
 }
@@ -634,7 +718,9 @@ static void print_header ()
 {
     std::cout << std::left << std::setw (25) << "Library" << std::right;
     for (const char* label : {"Core", "Core RT", "Indef", "Indef RT", "Tags", "Tags RT", "Keys", "Keys RT", "Reject"})
+    {
         std::cout << std::setw (12) << label;
+    }
     std::cout << "\n" << std::string (133, '-') << "\n";
 }
 
@@ -647,7 +733,9 @@ static void print_row (const std::string& name, const Result& r)
 {
     std::cout << std::left << std::setw (25) << name << std::right;
     for (int c = Core; c < Malformed; ++c)
+    {
         std::cout << std::setw (12) << fmt (r.accept[c]) << std::setw (12) << fmt (r.roundtrip[c]);
+    }
     std::cout << std::setw (12) << fmt (r.reject) << "\n";
 }
 
@@ -672,7 +760,9 @@ static void write_json (const std::string& output_path, const std::vector<std::p
         kv ("reject", r.reject);
         out << "\n    }";
         if (i + 1 < all.size ())
+        {
             out << ",";
+        }
         out << "\n";
     }
     out << "  ]\n}\n";
@@ -688,11 +778,17 @@ int main (int argc, char* argv[])
     {
         std::string arg (argv[i]);
         if (arg == "-v")
+        {
             verbose = true;
+        }
         else if (arg == "--header")
+        {
             header = true;
+        }
         else if (arg == "--output" && i + 1 < argc)
+        {
             output_path = argv[++i];
+        }
     }
 
     const fs::path data_dir = DATA_DIR;
@@ -701,7 +797,9 @@ int main (int argc, char* argv[])
 
     std::vector<std::string> check_files;
     for (const char* name : {"canada.cbor", "citm_catalog.cbor", "twitter.cbor"})
+    {
         check_files.push_back ((data_dir / name).string ());
+    }
     bool outputs_ok = true;
 
     if (header)
@@ -716,7 +814,9 @@ int main (int argc, char* argv[])
         using Adapter = decltype (adapter);
         std::string name{Adapter::name};
         if (verbose)
+        {
             std::cout << "\n[" << name << "]\n";
+        }
 
         Result r;
         run_valid<Adapter> (r, valid, verbose);
@@ -731,7 +831,9 @@ int main (int argc, char* argv[])
 #undef X
 
     if (!output_path.empty ())
+    {
         write_json (output_path, all_results);
+    }
 
     return outputs_ok ? 0 : 1;
 }
