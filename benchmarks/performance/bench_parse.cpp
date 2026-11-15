@@ -1,0 +1,53 @@
+#include <benchmark/benchmark.h>
+
+#include <sys/resource.h>
+
+#include ADAPTER_HEADER
+#include "common/utils.hpp"
+
+static const std::string canada = load_file (DATA_DIR "/canada.cbor");
+static const std::string citm = load_file (DATA_DIR "/citm_catalog.cbor");
+static const std::string twitter = load_file (DATA_DIR "/twitter.cbor");
+
+static void set_minflt (benchmark::State& state, const rusage& before)
+{
+    rusage after;
+    getrusage (RUSAGE_SELF, &after);
+    state.counters["minflt"] = benchmark::Counter (static_cast<double> (after.ru_minflt - before.ru_minflt),
+                                                   benchmark::Counter::kAvgIterations);
+}
+
+template <typename Adapter>
+static void BM_Parse (benchmark::State& state, const std::string* cbor)
+{
+    rusage before;
+    getrusage (RUSAGE_SELF, &before);
+    for (auto _ : state)
+    {
+        auto doc = Adapter::parse (*cbor);
+        benchmark::DoNotOptimize (doc);
+        state.PauseTiming ();
+        if (!doc)
+        {
+            state.SkipWithError ("Parse failed");
+            break;
+        }
+        doc.reset ();
+        state.ResumeTiming ();
+    }
+    set_minflt (state, before);
+    state.SetBytesProcessed (state.iterations () * static_cast<int64_t> (cbor->size ()));
+    state.SetLabel (std::string (Adapter::name));
+}
+
+#define REGISTER_PARSE(Adapter, tag, file) \
+    BENCHMARK_CAPTURE (BM_Parse<Adapter>, tag, &file)->Name ("Parse/" #tag "/" #Adapter)->Unit (benchmark::kMillisecond)
+
+#define X(Adapter)                            \
+    REGISTER_PARSE (Adapter, Canada, canada); \
+    REGISTER_PARSE (Adapter, Citm, citm);     \
+    REGISTER_PARSE (Adapter, Twitter, twitter);
+
+BENCH_ADAPTERS
+
+BENCHMARK_MAIN ();

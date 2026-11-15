@@ -1,0 +1,2 @@
+add_subdirectory(conformance)
+add_subdirectory(performance)
