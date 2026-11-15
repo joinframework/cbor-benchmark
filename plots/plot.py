@@ -10,13 +10,12 @@ from matplotlib.colors import to_rgb
 
 
 LIBRARY_LABELS = {
-    "JoinAdapter":         "join",
-    "JoinZeroCopyAdapter": "join/zero-copy",
-    "JsonConsAdapter":     "jsoncons",
-    "LibCborAdapter":      "libcbor",
-    "NlohmannAdapter":     "nlohmann",
-    "TaoCppAdapter":       "taocpp",
-    "TinyCborAdapter":     "tinycbor",
+    "JoinAdapter":           "join",
+    "JoinZeroCopyAdapter":   "join/zero-copy",
+    "JsonConsAdapter":       "jsoncons",
+    "LibCborAdapter":        "libcbor",
+    "NlohmannAdapter":       "nlohmann",
+    "TaoCppAdapter":         "taocpp",
 }
 
 LIBRARY_ORDER = list(LIBRARY_LABELS.values())
@@ -24,12 +23,11 @@ LIBRARY_ORDER = list(LIBRARY_LABELS.values())
 DATASET_ORDER = ["Canada", "Citm", "Twitter"]
 
 _FAMILY_COLORS = {
-    "join":     "#2ca02c",
+    "join":     "#1f77b4",
     "jsoncons": "#d62728",
     "libcbor":  "#9467bd",
     "nlohmann": "#8c564b",
     "taocpp":   "#e6ab02",
-    "tinycbor": "#1f77b4",
 }
 _LIB_COLORS: dict[str, tuple] = {}
 
@@ -103,7 +101,7 @@ def plot_deserialize(df: pd.DataFrame, output_dir: Path) -> None:
     fig, axes = plt.subplots(n_subs, 1, figsize=(10, row_h * n_subs))
     if n_subs == 1:
         axes = [axes]
-    fig.suptitle("CBOR Benchmark — Parse", fontsize=14, fontweight="bold")
+    fig.suptitle("CBOR Benchmark: Parse", fontsize=14, fontweight="bold")
 
     idx = 0
     _barh_ax(axes[idx], _summarise(parse_df), "Overall")
@@ -149,7 +147,7 @@ def _plot_write_bench(df: pd.DataFrame, output_dir: Path, bench_type: str, filen
     plt.close(fig)
 
 def plot_serialize(df: pd.DataFrame, output_dir: Path) -> None:
-    _plot_write_bench(df, output_dir, "Serialize", "performance_serialize.png", "CBOR Benchmark — Serialize")
+    _plot_write_bench(df, output_dir, "Serialize", "performance_serialize.png", "CBOR Benchmark: Serialize")
 
 _CONF_CATEGORIES = [
     "core_accept", "core_roundtrip",
@@ -159,10 +157,10 @@ _CONF_CATEGORIES = [
     "reject",
 ]
 _CONF_CAT_LABELS = [
-    "Core — Accept", "Core — Roundtrip",
-    "Indefinite Length — Accept", "Indefinite Length — Roundtrip",
-    "Tags — Accept", "Tags — Roundtrip",
-    "Non-string Keys — Accept", "Non-string Keys — Roundtrip",
+    "Core: Accept", "Core: Roundtrip",
+    "Indefinite Length: Accept", "Indefinite Length: Roundtrip",
+    "Tags: Accept", "Tags: Roundtrip",
+    "Non-string Keys: Accept", "Non-string Keys: Roundtrip",
     "Reject Malformed",
 ]
 
@@ -200,7 +198,7 @@ def plot_conformance(conf_paths: list[str], output_dir: Path) -> None:
 
     fig, axes = plt.subplots(len(all_keys), 1,
                              figsize=(10, row_h * len(all_keys)))
-    fig.suptitle("CBOR Benchmark — Conformance", fontsize=14, fontweight="bold")
+    fig.suptitle("CBOR Benchmark: Conformance", fontsize=14, fontweight="bold")
 
     for ax, c, label in zip(axes, all_keys, all_labels):
         libs   = [r["library"] for r in rows]

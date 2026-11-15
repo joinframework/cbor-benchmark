@@ -101,22 +101,3 @@ set(WITH_TESTS          OFF CACHE BOOL "" FORCE)
 set(SANITIZE            OFF CACHE BOOL "" FORCE)
 set(CBOR_PRETTY_PRINTER OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(libcbor)
-
-FetchContent_Declare(
-    tinycbor
-    GIT_REPOSITORY https://github.com/intel/tinycbor.git
-    GIT_TAG        v7.1
-    GIT_SHALLOW    TRUE
-)
-set(WITH_CBOR2JSON OFF CACHE BOOL "" FORCE)
-set(BUILD_TOOLS    OFF CACHE BOOL "" FORCE)
-set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(BUILD_TESTING  OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(tinycbor)
-file(COPY
-    ${tinycbor_SOURCE_DIR}/src/cbor.h
-    ${tinycbor_BINARY_DIR}/tinycbor-version.h
-    ${tinycbor_BINARY_DIR}/tinycbor-export.h
-    DESTINATION ${CMAKE_BINARY_DIR}/tinycbor-include/tinycbor
-)
-set_target_properties(tinycbor PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/tinycbor-include>")

@@ -20,4 +20,3 @@ add_cbor_conformance(jsoncons adapters/jsoncons.hpp jsoncons::jsoncons JsonConsA
 add_cbor_conformance(libcbor adapters/libcbor.hpp libcbor::libcbor LibCborAdapter)
 add_cbor_conformance(nlohmann adapters/nlohmann.hpp nlohmann_json::nlohmann_json NlohmannAdapter)
 add_cbor_conformance(taocpp adapters/taocpp.hpp taocpp::json TaoCppAdapter)
-add_cbor_conformance(tinycbor adapters/tinycbor.hpp tinycbor TinyCborAdapter)
